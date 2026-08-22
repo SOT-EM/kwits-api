@@ -1,0 +1,36 @@
+spring:
+  application:
+    name: kwits-api
+
+  datasource:
+    # Local dev points at the Postgres inside the Supabase stack started by
+    # `supabase start` in this directory. Port 54322 is what supabase/config.toml
+    # declares under [db]; `supabase status` prints the full connection string.
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://127.0.0.1:54322/postgres}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:postgres}
+
+  jpa:
+    # The schema is owned by supabase/migrations, never by Hibernate. `validate`
+    # makes a mismatch between entity and table fail loudly at startup instead of
+    # silently altering the database.
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+
+server:
+  port: ${SERVER_PORT:8080}
+
+# All three are required; startup fails fast if any is missing. See .env.example.
+supabase:
+  url: ${SUPABASE_URL}
+  anon-key: ${SUPABASE_ANON_KEY}
+  jwt-secret: ${SUPABASE_JWT_SECRET}
+
+logging:
+  level:
+    com.kwits.sotm.api: DEBUG

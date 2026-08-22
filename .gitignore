@@ -1,0 +1,43 @@
+# local env files
+.env
+.env.local
+.env*.local
+!.env.example
+
+# Java / Gradle / Maven build output
+target/
+build/
+.gradle/
+*.class
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# OS
+.DS_Store
+
+# Maven wrapper jar is downloaded on first run
+.mvn/wrapper/maven-wrapper.jar
+
+# keep source dirs that happen to be named build/ or target/
+!**/src/main/**/build/
+!**/src/main/**/target/
+!**/src/test/**/build/
+!**/src/test/**/target/
+
+# IDE (Eclipse / STS / NetBeans / IntelliJ extras)
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+*.ipr
+*.iws
+/nbproject/private/
+/nbbuild/
+/nbdist/
+/.nb-gradle/
