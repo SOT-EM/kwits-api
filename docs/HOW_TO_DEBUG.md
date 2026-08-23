@@ -64,7 +64,7 @@ psql postgresql://postgres:postgres@127.0.0.1:54322/postgres -c '\dt public.*'
 
 **Do not "fix" this by switching `ddl-auto` to `update`.** That would let Hibernate mutate a schema that `supabase/migrations/` owns, and the two would drift apart silently. The failure is the feature.
 
-## Problem 3: `/auth/login` returns a token, but `/plans` returns 401
+## Problem 3: `/v1/auth/login` returns a token, but `/v1/plans` returns 401
 
 **Symptom:** login succeeds, and the very next call with that token is rejected. In the mobile app this shows up as being signed out immediately after signing in.
 
@@ -116,7 +116,7 @@ curl -s http://127.0.0.1:54321/auth/v1/.well-known/jwks.json
 
 A populated `keys` array means asymmetric signing is available. Empty or 404 means symmetric.
 
-## Problem 5: `/auth/login` returns 401 for credentials you're sure are correct
+## Problem 5: `/v1/auth/login` returns 401 for credentials you're sure are correct
 
 **Symptom:** `{"status":401,"message":"Invalid email or password"}` for a user you just created.
 
@@ -165,7 +165,7 @@ lsof -i :54322                    # macOS/Linux
 
 Two Supabase projects cannot share these ports. If you also have a stack running from the old pre-split repo, stop that one — this repo's `supabase/config.toml` claims the same ports, since `project_id` is still `"kwits"`.
 
-## Problem 7: `GET /plans` returns `[]` for a user who should have plans
+## Problem 7: `GET /v1/plans` returns `[]` for a user who should have plans
 
 **Symptom:** 200 with an empty array, no error.
 
@@ -185,7 +185,7 @@ If `host_id` values don't match `sub`, the rows belong to someone else — that 
 
 **Symptom:** a typo'd or not-yet-built path returns 401 rather than "not found".
 
-**Cause:** `SecurityConfig` permits `/auth/login` and `/auth/signup` and requires authentication for `anyRequest()`. Security runs before routing, so an unauthenticated request to a nonexistent path is rejected for lacking a token before anything discovers there's no handler.
+**Cause:** `SecurityConfig` permits `/v1/auth/login` and `/v1/auth/signup` and requires authentication for `anyRequest()`. Security runs before routing, so an unauthenticated request to a nonexistent path is rejected for lacking a token before anything discovers there's no handler.
 
 **Fix:** nothing to fix — but don't let it mislead you. Retry with a valid token: a real 404 then surfaces, which tells you the route is genuinely missing rather than protected.
 
@@ -208,7 +208,7 @@ On Windows, use `.\mvnw.cmd` from PowerShell — the extensionless `./mvnw` is a
 
 ## General lessons
 
-- **A 401 from `/plans` with no token is health, not failure.** There is no public health endpoint, so that is the probe. Learn to read it as "up and protected."
+- **A 401 from `/v1/plans` with no token is health, not failure.** There is no public health endpoint, so that is the probe. Learn to read it as "up and protected."
 - **An empty array is not proof of a working round trip.** Insert a row and fetch it back; a silently-broken query returns `[]` too.
 - **Restart the API after touching `.env`.** Config is read once at startup. Editing the file and re-running curl changes nothing.
 - **Startup failures are the good failures.** A missing property or a schema mismatch stops the boot with the cause named. Both were configured to behave that way rather than degrade into a runtime 500 later.

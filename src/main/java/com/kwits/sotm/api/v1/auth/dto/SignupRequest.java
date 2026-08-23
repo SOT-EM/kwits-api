@@ -1,4 +1,4 @@
-package com.kwits.sotm.api.auth.dto;
+package com.kwits.sotm.api.v1.auth.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

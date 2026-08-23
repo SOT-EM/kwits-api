@@ -15,7 +15,7 @@ import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.web.SecurityFilterChain;
 
 /**
- * Stateless security: every route except {@code /auth/**} requires a valid
+ * Stateless security: every route except {@code /v1/auth/**} requires a valid
  * Supabase-issued access token.
  *
  * <p>kwits-api deliberately does not mint its own tokens. The token the mobile app
@@ -38,7 +38,7 @@ public class SecurityConfig {
 				.csrf(csrf -> csrf.disable())
 				.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 				.authorizeHttpRequests(auth -> auth
-						.requestMatchers("/auth/login", "/auth/signup").permitAll()
+						.requestMatchers("/v1/auth/login", "/v1/auth/signup").permitAll()
 						.anyRequest().authenticated())
 				.oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))
 				.build();

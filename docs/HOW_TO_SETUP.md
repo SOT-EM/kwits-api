@@ -181,7 +181,7 @@ If the app boots and logs a Tomcat port, you are set. Two failures worth recogni
 Then confirm the API is answering:
 
 ```bash
-curl -i http://localhost:8080/plans
+curl -i http://localhost:8080/v1/plans
 ```
 
 A `401` is the correct answer — the route exists and is protected. There is no public health endpoint, so this is the health probe.

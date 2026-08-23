@@ -1,7 +1,7 @@
-package com.kwits.sotm.api.auth;
+package com.kwits.sotm.api.v1.auth;
 
-import com.kwits.sotm.api.auth.dto.LoginRequest;
-import com.kwits.sotm.api.auth.dto.LoginResponse;
+import com.kwits.sotm.api.v1.auth.dto.LoginRequest;
+import com.kwits.sotm.api.v1.auth.dto.LoginResponse;
 import com.kwits.sotm.api.common.ApiException;
 import com.kwits.sotm.api.config.SecurityConfig;
 import com.kwits.sotm.api.config.SupabaseProperties;
@@ -51,7 +51,7 @@ class AuthControllerTest {
 				.willReturn(new LoginResponse("supabase-issued-token", "refresh-token", 3600,
 						new LoginResponse.AuthUser("8f1b2c3d-0000-4000-8000-000000000001", "cj@example.com")));
 
-		mockMvc.perform(post("/auth/login")
+		mockMvc.perform(post("/v1/auth/login")
 						.contentType(MediaType.APPLICATION_JSON)
 						.content("{\"email\":\"cj@example.com\",\"password\":\"hunter22\"}"))
 				.andExpect(status().isOk())
@@ -61,7 +61,7 @@ class AuthControllerTest {
 
 	@Test
 	void loginRejectsAMalformedEmailBeforeCallingSupabase() throws Exception {
-		mockMvc.perform(post("/auth/login")
+		mockMvc.perform(post("/v1/auth/login")
 						.contentType(MediaType.APPLICATION_JSON)
 						.content("{\"email\":\"not-an-email\",\"password\":\"hunter22\"}"))
 				.andExpect(status().isBadRequest())
@@ -76,7 +76,7 @@ class AuthControllerTest {
 		BDDMockito.given(authService.login(ArgumentMatchers.any(LoginRequest.class)))
 				.willThrow(new ApiException(HttpStatus.UNAUTHORIZED, "Invalid email or password"));
 
-		mockMvc.perform(post("/auth/login")
+		mockMvc.perform(post("/v1/auth/login")
 						.contentType(MediaType.APPLICATION_JSON)
 						.content("{\"email\":\"cj@example.com\",\"password\":\"wrong\"}"))
 				.andExpect(status().isUnauthorized())
