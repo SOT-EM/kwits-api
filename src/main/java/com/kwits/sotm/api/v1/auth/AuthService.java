@@ -1,13 +1,13 @@
-package com.kwits.sotm.api.auth;
+package com.kwits.sotm.api.v1.auth;
 
 import java.util.HashMap;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.kwits.sotm.api.auth.dto.LoginRequest;
-import com.kwits.sotm.api.auth.dto.LoginResponse;
-import com.kwits.sotm.api.auth.dto.SignupRequest;
+import com.kwits.sotm.api.v1.auth.dto.LoginRequest;
+import com.kwits.sotm.api.v1.auth.dto.LoginResponse;
+import com.kwits.sotm.api.v1.auth.dto.SignupRequest;
 import com.kwits.sotm.api.common.ApiException;
 import com.kwits.sotm.api.config.SupabaseProperties;
 

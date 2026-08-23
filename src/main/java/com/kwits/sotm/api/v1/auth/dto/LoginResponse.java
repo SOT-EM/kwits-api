@@ -1,4 +1,4 @@
-package com.kwits.sotm.api.auth.dto;
+package com.kwits.sotm.api.v1.auth.dto;
 
 /**
  * What the mobile app receives. {@code accessToken} is Supabase's own JWT, passed

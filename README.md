@@ -15,16 +15,22 @@ no global Maven install is required.
 
 ```
 src/main/java/com/kwits/sotm/api/
-  auth/      POST /auth/login, POST /auth/signup -- proxied to Supabase Auth
-  plans/     GET /plans (protected) -- reads travel_plans over JPA
+  v1/
+    auth/    POST /v1/auth/login, POST /v1/auth/signup -- proxied to Supabase Auth
+    plans/   PlanController: GET /v1/plans (protected)
+  plans/     PlanService, PlanRepository, entity/Plan -- unversioned domain/persistence,
+             reused by any API version
   config/    SecurityConfig (JWT validation), SupabaseProperties
   common/    ApiError, ApiException, GlobalExceptionHandler
 supabase/    Supabase CLI project: config.toml and migrations
 ```
 
+A future `v2` adds a sibling `v1/`-style package with its own controllers and DTOs; it
+imports the same `plans`, `config`, and `common` packages rather than duplicating them.
+
 ## Tokens
 
-kwits-api does **not** issue its own JWTs. `/auth/login` forwards the credentials to
+kwits-api does **not** issue its own JWTs. `/v1/auth/login` forwards the credentials to
 Supabase and passes Supabase's `access_token` straight back to the client. Protected
 routes then validate that same token. One token system, one expiry policy, one place
 to rotate keys.
@@ -91,7 +97,7 @@ supabase start            # Postgres on 54322, Auth/API on 54321
 ```
 
 ```bash
-curl -i http://localhost:8080/plans
+curl -i http://localhost:8080/v1/plans
 ```
 
 A `401` is the healthy answer: the route exists and is protected. There is no public

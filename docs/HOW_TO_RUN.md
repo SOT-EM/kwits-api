@@ -36,15 +36,15 @@ Three routes exist. That is deliberate: this phase implements one complete round
 
 | Method | Route | Auth | Purpose |
 | --- | --- | --- | --- |
-| `POST` | `/auth/signup` | Public | Creates a Supabase Auth user, returns a session |
-| `POST` | `/auth/login` | Public | Exchanges email/password for a Supabase access token |
-| `GET` | `/plans` | **Bearer token** | The signed-in user's travel plans |
+| `POST` | `/v1/auth/signup` | Public | Creates a Supabase Auth user, returns a session |
+| `POST` | `/v1/auth/login` | Public | Exchanges email/password for a Supabase access token |
+| `GET` | `/v1/plans` | **Bearer token** | The signed-in user's travel plans |
 
-Anything not listed is `authenticated` by default — `SecurityConfig` permits only the two `/auth` routes and requires a valid token for everything else. So a typo in a URL returns 401, not 404, which is worth knowing before you spend time debugging the wrong thing.
+Anything not listed is `authenticated` by default — `SecurityConfig` permits only the two `/v1/auth` routes and requires a valid token for everything else. So a typo in a URL returns 401, not 404, which is worth knowing before you spend time debugging the wrong thing.
 
 ### Tokens
 
-kwits-api does not issue its own JWTs. `/auth/login` forwards credentials to Supabase and passes Supabase's `access_token` straight back. `/plans` then validates that same token. One token system, one expiry policy, one place to rotate keys.
+kwits-api does not issue its own JWTs. `/v1/auth/login` forwards credentials to Supabase and passes Supabase's `access_token` straight back. `/v1/plans` then validates that same token. One token system, one expiry policy, one place to rotate keys.
 
 This means a token obtained from kwits-api is also a valid Supabase token. That is fine — the mobile app never sees Supabase's address, and RLS with no policies means the token grants nothing against Supabase's own REST API.
 
@@ -55,7 +55,7 @@ Run these from your host terminal, in order. This is the check that actually pro
 **Step 1 — the API is up and protecting its routes:**
 
 ```bash
-curl -i http://localhost:8080/plans
+curl -i http://localhost:8080/v1/plans
 ```
 
 Expect **401**. A 401 here is success. Connection refused means the API isn't running.
@@ -63,7 +63,7 @@ Expect **401**. A 401 here is success. Connection refused means the API isn't ru
 **Step 2 — create a test user:**
 
 ```bash
-curl -X POST http://localhost:8080/auth/signup \
+curl -X POST http://localhost:8080/v1/auth/signup \
   -H 'Content-Type: application/json' \
   -d '{"email":"test@example.com","password":"hunter22","name":"Test User"}'
 ```
@@ -73,11 +73,11 @@ Expect JSON with an `accessToken`. If you get **202** with a message about confi
 **Step 3 — log in and call the protected route:**
 
 ```bash
-TOKEN=$(curl -s -X POST http://localhost:8080/auth/login \
+TOKEN=$(curl -s -X POST http://localhost:8080/v1/auth/login \
   -H 'Content-Type: application/json' \
   -d '{"email":"test@example.com","password":"hunter22"}' | jq -r .accessToken)
 
-curl -s http://localhost:8080/plans -H "Authorization: Bearer $TOKEN"
+curl -s http://localhost:8080/v1/plans -H "Authorization: Bearer $TOKEN"
 ```
 
 Expect `[]`. An empty array is the win: the request was authenticated, the `sub` claim was read, JPA queried `travel_plans`, and the user genuinely has no plans yet.
@@ -89,7 +89,7 @@ psql postgresql://postgres:postgres@127.0.0.1:54322/postgres -c \
   "insert into travel_plans (host_id, title, start_date, end_date)
    select id, 'Test Trip', '2026-09-01', '2026-09-05' from profiles limit 1;"
 
-curl -s http://localhost:8080/plans -H "Authorization: Bearer $TOKEN"
+curl -s http://localhost:8080/v1/plans -H "Authorization: Bearer $TOKEN"
 ```
 
 Now expect one plan. Skipping this step is how an empty array from a silently-broken query gets mistaken for a working round trip.

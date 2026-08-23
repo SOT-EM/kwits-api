@@ -1,8 +1,8 @@
-package com.kwits.sotm.api.auth;
+package com.kwits.sotm.api.v1.auth;
 
-import com.kwits.sotm.api.auth.dto.LoginRequest;
-import com.kwits.sotm.api.auth.dto.LoginResponse;
-import com.kwits.sotm.api.auth.dto.SignupRequest;
+import com.kwits.sotm.api.v1.auth.dto.LoginRequest;
+import com.kwits.sotm.api.v1.auth.dto.LoginResponse;
+import com.kwits.sotm.api.v1.auth.dto.SignupRequest;
 
 import jakarta.validation.Valid;
 
@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/auth")
+@RequestMapping("/v1/auth")
 public class AuthController {
 
 	private final AuthService authService;

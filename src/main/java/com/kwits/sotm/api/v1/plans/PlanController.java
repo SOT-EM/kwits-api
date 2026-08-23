@@ -1,9 +1,10 @@
-package com.kwits.sotm.api.plans;
+package com.kwits.sotm.api.v1.plans;
 
 import java.util.List;
 import java.util.UUID;
 
 import com.kwits.sotm.api.common.ApiException;
+import com.kwits.sotm.api.plans.PlanService;
 import com.kwits.sotm.api.plans.entity.Plan;
 
 import org.springframework.http.HttpStatus;
@@ -18,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
  * Supabase access token it was handed.
  */
 @RestController
-@RequestMapping("/plans")
+@RequestMapping("/v1/plans")
 public class PlanController {
 
 	private final PlanService planService;
