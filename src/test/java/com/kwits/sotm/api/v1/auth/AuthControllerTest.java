@@ -33,9 +33,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @EnableConfigurationProperties(SupabaseProperties.class)
 @TestPropertySource(properties = {
 		"supabase.url=http://127.0.0.1:54321",
-		"supabase.anon-key=test-anon-key",
-		// 32+ bytes: HS256 secrets shorter than that are rejected outright.
-		"supabase.jwt-secret=test-jwt-secret-at-least-32-bytes-long"
+		"supabase.anon-key=test-anon-key"
 })
 class AuthControllerTest {
 

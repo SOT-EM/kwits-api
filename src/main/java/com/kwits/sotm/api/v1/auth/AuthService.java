@@ -58,10 +58,18 @@ public class AuthService {
 		Map<String, Object> body = new HashMap<>();
 		body.put("email", request.email());
 		body.put("password", request.password());
+
+		Map<String, Object> data = new HashMap<>();
 		if (request.name() != null && !request.name().isBlank()) {
 			// Lands in auth.users.raw_user_meta_data, which the handle_new_user
 			// trigger copies into profiles.name.
-			body.put("data", Map.of("name", request.name()));
+			data.put("name", request.name());
+		}
+		if (request.username() != null && !request.username().isBlank()){
+			data.put("username", request.username());
+		}
+		if (!data.isEmpty()){
+			body.put("data", data);
 		}
 
 		SupabaseSession session = client.post()
