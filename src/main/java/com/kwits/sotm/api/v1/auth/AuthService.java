@@ -7,7 +7,9 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.kwits.sotm.api.v1.auth.dto.LoginRequest;
 import com.kwits.sotm.api.v1.auth.dto.LoginResponse;
+import com.kwits.sotm.api.v1.auth.dto.OtpVerifyRequest;
 import com.kwits.sotm.api.v1.auth.dto.SignupRequest;
+import com.kwits.sotm.api.v1.auth.dto.SignupResponse;
 import com.kwits.sotm.api.common.ApiException;
 import com.kwits.sotm.api.config.SupabaseProperties;
 
@@ -54,7 +56,7 @@ public class AuthService {
 		return toLoginResponse(session);
 	}
 
-	public LoginResponse signup(SignupRequest request) {
+	public SignupResponse signup(SignupRequest request) {
 		Map<String, Object> body = new HashMap<>();
 		body.put("email", request.email());
 		body.put("password", request.password());
@@ -72,12 +74,32 @@ public class AuthService {
 			body.put("data", data);
 		}
 
-		SupabaseSession session = client.post()
+		SupabaseUser user = client.post()
 				.uri("/auth/v1/signup")
 				.body(body)
 				.retrieve()
 				.onStatus(HttpStatusCode::isError, (req, res) -> {
 					throw new ApiException(HttpStatus.BAD_REQUEST, "Could not create that account");
+				})
+				.body(SupabaseUser.class);
+
+		if (user == null) {
+			// Unexpected, but be defensive rather than NPE.
+			throw new ApiException(HttpStatus.BAD_GATEWAY, "No response from the auth provider");
+		}
+
+		return new SignupResponse(
+				"Account created. Enter the code emailed to you to verify your email address.",
+				user.email());
+	}
+
+	public LoginResponse verifyOtp(OtpVerifyRequest request) {
+		SupabaseSession session = client.post()
+				.uri("/auth/v1/verify")
+				.body(Map.of("type", "email", "email", request.email(), "token", request.otp()))
+				.retrieve()
+				.onStatus(HttpStatusCode::isError, (req, res) -> {
+					throw new ApiException(HttpStatus.BAD_REQUEST, "Incorrect code");
 				})
 				.body(SupabaseSession.class);
 
@@ -88,12 +110,7 @@ public class AuthService {
 		if (session == null) {
 			throw new ApiException(HttpStatus.BAD_GATEWAY, "No response from the auth provider");
 		}
-		if (session.accessToken() == null) {
-			// Signup with email confirmation enabled returns a user but no session.
-			throw new ApiException(HttpStatus.ACCEPTED,
-					"Account created. Confirm your email address before signing in.");
-		}
-		SupabaseSession.SupabaseUser user = session.user();
+		SupabaseUser user = session.user();
 		return new LoginResponse(
 				session.accessToken(),
 				session.refreshToken(),
@@ -103,14 +120,18 @@ public class AuthService {
 
 	/** Supabase's wire format. Kept private so its snake_case shape stops here. */
 	@JsonIgnoreProperties(ignoreUnknown = true)
+	private record SupabaseUser(@JsonProperty("id") String id, @JsonProperty("email") String email) {
+	}
+
+	/**
+	 * A full session, returned by login and by a successful OTP verification.
+	 * {@code expires_in} is boxed because unauthenticated flows emit it as null.
+	 */
+	@JsonIgnoreProperties(ignoreUnknown = true)
 	private record SupabaseSession(
 			@JsonProperty("access_token") String accessToken,
 			@JsonProperty("refresh_token") String refreshToken,
-			@JsonProperty("expires_in") long expiresIn,
+			@JsonProperty("expires_in") Long expiresIn,
 			SupabaseUser user) {
-
-		@JsonIgnoreProperties(ignoreUnknown = true)
-		private record SupabaseUser(String id, String email) {
-		}
 	}
 }

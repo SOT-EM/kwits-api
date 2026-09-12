@@ -2,6 +2,9 @@ package com.kwits.sotm.api.v1.auth;
 
 import com.kwits.sotm.api.v1.auth.dto.LoginRequest;
 import com.kwits.sotm.api.v1.auth.dto.LoginResponse;
+import com.kwits.sotm.api.v1.auth.dto.OtpVerifyRequest;
+import com.kwits.sotm.api.v1.auth.dto.SignupRequest;
+import com.kwits.sotm.api.v1.auth.dto.SignupResponse;
 import com.kwits.sotm.api.common.ApiException;
 import com.kwits.sotm.api.config.SecurityConfig;
 import com.kwits.sotm.api.config.SupabaseProperties;
@@ -79,5 +82,72 @@ class AuthControllerTest {
 						.content("{\"email\":\"cj@example.com\",\"password\":\"wrong\"}"))
 				.andExpect(status().isUnauthorized())
 				.andExpect(jsonPath("$.message").value("Invalid email or password"));
+	}
+
+	@Test
+	void signupReturnsANonSessionResponse() throws Exception {
+		BDDMockito.given(authService.signup(ArgumentMatchers.any(SignupRequest.class)))
+				.willReturn(new SignupResponse(
+						"Account created. Enter the code emailed to you to verify your email address.",
+						"cj@example.com"));
+
+		mockMvc.perform(post("/v1/auth/signup")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content("{\"email\":\"cj@example.com\",\"password\":\"hunter22\","
+								+ "\"name\":\"CJ\",\"username\":\"cj\"}"))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.message").exists())
+				.andExpect(jsonPath("$.email").value("cj@example.com"))
+				.andExpect(jsonPath("$.accessToken").doesNotExist());
+	}
+
+	@Test
+	void signupRejectsAMalformedEmailBeforeCallingSupabase() throws Exception {
+		mockMvc.perform(post("/v1/auth/signup")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content("{\"email\":\"not-an-email\",\"password\":\"hunter22\"}"))
+				.andExpect(status().isBadRequest())
+				.andExpect(jsonPath("$.message").value("Validation failed"))
+				.andExpect(jsonPath("$.fieldErrors.email").exists());
+
+		BDDMockito.then(authService).shouldHaveNoInteractions();
+	}
+
+	@Test
+	void verifyOtpReturnsASupabaseSession() throws Exception {
+		BDDMockito.given(authService.verifyOtp(ArgumentMatchers.any(OtpVerifyRequest.class)))
+				.willReturn(new LoginResponse("supabase-issued-token", "refresh-token", 3600,
+						new LoginResponse.AuthUser("8f1b2c3d-0000-4000-8000-000000000001", "cj@example.com")));
+
+		mockMvc.perform(post("/v1/auth/otp/verify")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content("{\"email\":\"cj@example.com\",\"otp\":\"123456\"}"))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.accessToken").value("supabase-issued-token"))
+				.andExpect(jsonPath("$.user.email").value("cj@example.com"));
+	}
+
+	@Test
+	void verifyOtpRejectsAMalformedCodeBeforeCallingSupabase() throws Exception {
+		mockMvc.perform(post("/v1/auth/otp/verify")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content("{\"email\":\"cj@example.com\",\"otp\":\"12ab\"}"))
+				.andExpect(status().isBadRequest())
+				.andExpect(jsonPath("$.message").value("Validation failed"))
+				.andExpect(jsonPath("$.fieldErrors.otp").exists());
+
+		BDDMockito.then(authService).shouldHaveNoInteractions();
+	}
+
+	@Test
+	void verifyOtpSurfacesIncorrectCodeAsBadRequest() throws Exception {
+		BDDMockito.given(authService.verifyOtp(ArgumentMatchers.any(OtpVerifyRequest.class)))
+				.willThrow(new ApiException(HttpStatus.BAD_REQUEST, "Incorrect code"));
+
+		mockMvc.perform(post("/v1/auth/otp/verify")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content("{\"email\":\"cj@example.com\",\"otp\":\"000000\"}"))
+				.andExpect(status().isBadRequest())
+				.andExpect(jsonPath("$.message").value("Incorrect code"));
 	}
 }
