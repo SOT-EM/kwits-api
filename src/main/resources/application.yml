@@ -2,6 +2,9 @@ spring:
   application:
     name: kwits-api
 
+  config:
+    import: optional:file:${user.dir}/.env[.properties]
+
   datasource:
     # Local dev points at the Postgres inside the Supabase stack started by
     # `supabase start` in this directory. Port 54322 is what supabase/config.toml
@@ -25,11 +28,12 @@ spring:
 server:
   port: ${SERVER_PORT:8080}
 
-# All three are required; startup fails fast if any is missing. See .env.example.
+# Both are required; startup fails fast if either is missing. See .env.example.
+# JWT verification uses the JWKS endpoint (/auth/v1/.well-known/jwks.json) so
+# SUPABASE_JWT_SECRET is no longer needed. See SecurityConfig.jwtDecoder().
 supabase:
   url: ${SUPABASE_URL}
   anon-key: ${SUPABASE_ANON_KEY}
-  jwt-secret: ${SUPABASE_JWT_SECRET}
 
 logging:
   level:

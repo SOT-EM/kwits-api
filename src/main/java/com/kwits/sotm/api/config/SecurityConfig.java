@@ -1,15 +1,10 @@
 package com.kwits.sotm.api.config;
 
-import java.nio.charset.StandardCharsets;
-
-import javax.crypto.spec.SecretKeySpec;
-
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -47,26 +42,28 @@ public class SecurityConfig {
 	// ---------------------------------------------------------------------------
 	// JWT DECODER -- THE ONE PLACE THE SIGNING ALGORITHM IS DECIDED.
 	//
-	// This is built for HS256 with a shared secret, which is what local Supabase
-	// uses: supabase/config.toml leaves `signing_keys_path` commented out, so the
-	// stack falls back to the legacy symmetric secret that `supabase status` prints.
+	// Uses JWKS-based verification (ES256 asymmetric) because the local Supabase
+	// stack is running on the new publishable/secret key system, which signs tokens
+	// with an EC key pair rather than a shared HMAC secret.
 	//
-	// A hosted Supabase project on the newer publishable/secret key system may sign
-	// asymmetrically instead. If so, replace this method body with:
+	// The JWKS endpoint is fetched once and cached by NimbusJwtDecoder; it will
+	// automatically refresh when a new key ID (kid) is encountered.
 	//
-	//     return NimbusJwtDecoder
-	//             .withJwkSetUri(supabase.url() + "/auth/v1/.well-known/jwks.json")
+	// If you ever switch back to a legacy Supabase setup that uses a symmetric
+	// HS256 secret, replace this method body with:
+	//
+	//     SecretKeySpec key = new SecretKeySpec(
+	//             supabase.jwtSecret().getBytes(StandardCharsets.UTF_8), "HmacSHA256");
+	//     return NimbusJwtDecoder.withSecretKey(key)
+	//             .macAlgorithm(MacAlgorithm.HS256)
 	//             .build();
 	//
-	// and drop SUPABASE_JWT_SECRET from the config. Nothing else in the codebase
-	// needs to change -- that is the point of isolating it here.
+	// and restore SUPABASE_JWT_SECRET to the config.
 	// ---------------------------------------------------------------------------
 	@Bean
 	JwtDecoder jwtDecoder() {
-		SecretKeySpec key = new SecretKeySpec(
-				supabase.jwtSecret().getBytes(StandardCharsets.UTF_8), "HmacSHA256");
-		return NimbusJwtDecoder.withSecretKey(key)
-				.macAlgorithm(MacAlgorithm.HS256)
+		return NimbusJwtDecoder
+				.withJwkSetUri(supabase.url() + "/auth/v1/.well-known/jwks.json")
 				.build();
 	}
 }
