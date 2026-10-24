@@ -7,9 +7,13 @@ import org.springframework.validation.annotation.Validated;
 /**
  * Typed binding for the {@code supabase.*} configuration.
  *
- * <p>All three values come from the environment (see {@code .env.example}); none are
+ * <p>Both values come from the environment (see {@code .env.example}); none are
  * hardcoded. Startup fails fast with a clear message if any is missing, which is
  * preferable to a confusing 401 on the first login attempt.
+ *
+ * <p>JWT verification uses the JWKS endpoint ({@code /auth/v1/.well-known/jwks.json})
+ * rather than a shared secret, so {@code SUPABASE_JWT_SECRET} is no longer required.
+ * See {@code SecurityConfig.jwtDecoder()}.
  */
 @Validated
 @ConfigurationProperties(prefix = "supabase")
@@ -19,8 +23,5 @@ public record SupabaseProperties(
 		@NotBlank String url,
 
 		/** Publishable/anon key, sent as the {@code apikey} header on Auth REST calls. */
-		@NotBlank String anonKey,
-
-		/** Shared secret Supabase signs its access tokens with. See SecurityConfig. */
-		@NotBlank String jwtSecret) {
+		@NotBlank String anonKey) {
 }

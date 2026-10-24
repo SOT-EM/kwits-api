@@ -2,7 +2,9 @@ package com.kwits.sotm.api.v1.auth;
 
 import com.kwits.sotm.api.v1.auth.dto.LoginRequest;
 import com.kwits.sotm.api.v1.auth.dto.LoginResponse;
+import com.kwits.sotm.api.v1.auth.dto.OtpVerifyRequest;
 import com.kwits.sotm.api.v1.auth.dto.SignupRequest;
+import com.kwits.sotm.api.v1.auth.dto.SignupResponse;
 
 import jakarta.validation.Valid;
 
@@ -27,7 +29,12 @@ public class AuthController {
 	}
 
 	@PostMapping("/signup")
-	public LoginResponse signup(@Valid @RequestBody SignupRequest request) {
+	public SignupResponse signup(@Valid @RequestBody SignupRequest request) {
 		return authService.signup(request);
+	}
+
+	@PostMapping("/otp/verify")
+	public LoginResponse verifyOtp(@Valid @RequestBody OtpVerifyRequest request) {
+		return authService.verifyOtp(request);
 	}
 }

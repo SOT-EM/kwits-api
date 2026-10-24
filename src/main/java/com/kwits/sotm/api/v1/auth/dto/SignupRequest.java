@@ -9,7 +9,10 @@ import jakarta.validation.constraints.Size;
  * {@code handle_new_user} trigger copies it into {@code profiles.name}.
  */
 public record SignupRequest(
-		@Email(message = "must be a valid email address") @NotBlank String email,
+		@Email(message = "must be a valid email address") 
+		@NotBlank String email,
 		@NotBlank @Size(min = 6, message = "must be at least 6 characters") String password,
-		String name) {
+		String name,
+		String username
+	) {
 }
